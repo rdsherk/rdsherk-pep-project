@@ -6,6 +6,7 @@ import Model.Account;
 import Model.Message;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
+import Service.*;
 
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
@@ -13,6 +14,12 @@ import io.javalin.http.Context;
  * refer to prior mini-project labs and lecture materials for guidance on how a controller may be built.
  */
 public class SocialMediaController {
+    AccountService accountService;
+    MessageService messageService;
+    public SocialMediaController(){
+        this.accountService = new AccountService();
+        this.messageService = new MessageService();
+    }
     /**
      * In order for the test cases to work, you will need to write the endpoints in the startAPI() method, as the test
      * suite must receive a Javalin object from this method.
@@ -39,7 +46,11 @@ public class SocialMediaController {
     private void postAccount(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        Account newAccount = accountService.createAccount(account.getUsername(), account.getPassword());
+        if (newAccount == null) {
+            context.status(400);
+        }
+        context.json(mapper.writeValueAsString(newAccount));
     }
 
     /**
@@ -49,7 +60,12 @@ public class SocialMediaController {
     private void login(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        Account newAccount = accountService.login(account);
+        if (newAccount == null) {
+            context.status(401);
+        }
+        context.json(mapper.writeValueAsString(newAccount));
+        context.status(200);
     }
 
     /**
@@ -58,8 +74,12 @@ public class SocialMediaController {
      */
     private void postMessage(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        Message message = mapper.readValue(context.body(), Message.class);
+        Message newMessage = messageService.addMessage(message);
+        if (newMessage == null) {
+            context.status(400);
+        }
+        context.json(mapper.writeValueAsString(newMessage));
     }
 
     /**
@@ -67,9 +87,7 @@ public class SocialMediaController {
      * @param context The Javalin Context object manages information about both the HTTP request and response.
      */
     private void getAllMessages(Context context)  throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        context.json(messageService.getAllMessages());
     }
 
     /**
@@ -78,8 +96,8 @@ public class SocialMediaController {
      */
     private void getMessageByID(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        Message newMessage = messageService.getMessage(Integer.parseInt(context.pathParam("message_id")));
+        context.json(mapper.writeValueAsString(newMessage));
     }
 
     /**
@@ -88,8 +106,8 @@ public class SocialMediaController {
      */
     private void deleteMessage(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        Message message = messageService.deleteMessage(Integer.parseInt(context.pathParam("message_id")));
+        context.json(mapper.writeValueAsString(message));
     }
 
     /**
@@ -98,8 +116,12 @@ public class SocialMediaController {
      */
     private void updateMessage(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        String message_text = mapper.readValue(context.body(), String.class);
+        Message message = messageService.updateMessage(Integer.parseInt(context.pathParam("message_id")), message_text);
+        if (message == null) {
+            context.status(400);
+        }
+        context.json(mapper.writeValueAsString(message));
     }
 
     /**
@@ -107,9 +129,7 @@ public class SocialMediaController {
      * @param context The Javalin Context object manages information about both the HTTP request and response.
      */
     private void getMessagesByUser(Context context)  throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        Account account = mapper.readValue(context.body(), Account.class);
-        context.json("sample text");
+        context.json(messageService.getMessagesByUser(Integer.parseInt(context.pathParam("account_id"))));
     }
 
 
