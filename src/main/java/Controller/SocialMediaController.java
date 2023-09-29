@@ -34,7 +34,7 @@ public class SocialMediaController {
         app.get("/messages/{message_id}", this::getMessageByID);
         app.delete("/messages/{message_id}", this::deleteMessage);
         app.patch("/messages/{message_id}", this::updateMessage);
-        app.get("/accounts/{account_id}", this::getMessagesByUser);
+        app.get("/accounts/{account_id}/messages", this::getMessagesByUser);
 
         return app;
     }
@@ -49,8 +49,9 @@ public class SocialMediaController {
         Account newAccount = accountService.createAccount(account.getUsername(), account.getPassword());
         if (newAccount == null) {
             context.status(400);
+        } else {
+            context.json(mapper.writeValueAsString(newAccount));
         }
-        context.json(mapper.writeValueAsString(newAccount));
     }
 
     /**
@@ -63,9 +64,10 @@ public class SocialMediaController {
         Account newAccount = accountService.login(account);
         if (newAccount == null) {
             context.status(401);
+        } else {
+            context.json(mapper.writeValueAsString(newAccount));
+            context.status(200);
         }
-        context.json(mapper.writeValueAsString(newAccount));
-        context.status(200);
     }
 
     /**
@@ -78,8 +80,10 @@ public class SocialMediaController {
         Message newMessage = messageService.addMessage(message);
         if (newMessage == null) {
             context.status(400);
+        } else {
+            context.json(mapper.writeValueAsString(newMessage));
+            context.status(200);
         }
-        context.json(mapper.writeValueAsString(newMessage));
     }
 
     /**
@@ -88,6 +92,7 @@ public class SocialMediaController {
      */
     private void getAllMessages(Context context)  throws JsonProcessingException {
         context.json(messageService.getAllMessages());
+        context.status(200);
     }
 
     /**
@@ -97,7 +102,10 @@ public class SocialMediaController {
     private void getMessageByID(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         Message newMessage = messageService.getMessage(Integer.parseInt(context.pathParam("message_id")));
-        context.json(mapper.writeValueAsString(newMessage));
+        if (newMessage != null) {
+            context.json(mapper.writeValueAsString(newMessage));
+        }
+        context.status(200);
     }
 
     /**
@@ -107,7 +115,11 @@ public class SocialMediaController {
     private void deleteMessage(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         Message message = messageService.deleteMessage(Integer.parseInt(context.pathParam("message_id")));
-        context.json(mapper.writeValueAsString(message));
+        if (message != null) {
+            context.json(mapper.writeValueAsString(message));
+            String messageString = message.toString();
+        }
+        context.status(200);
     }
 
     /**
@@ -116,12 +128,14 @@ public class SocialMediaController {
      */
     private void updateMessage(Context context)  throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        String message_text = mapper.readValue(context.body(), String.class);
-        Message message = messageService.updateMessage(Integer.parseInt(context.pathParam("message_id")), message_text);
+        Message message_text = mapper.readValue(context.body(), Message.class);
+        Message message = messageService.updateMessage(Integer.parseInt(context.pathParam("message_id")), message_text.getMessage_text());
         if (message == null) {
             context.status(400);
+        } else {
+            context.status(200);
+            context.json(mapper.writeValueAsString(message));
         }
-        context.json(mapper.writeValueAsString(message));
     }
 
     /**
@@ -130,6 +144,7 @@ public class SocialMediaController {
      */
     private void getMessagesByUser(Context context)  throws JsonProcessingException {
         context.json(messageService.getMessagesByUser(Integer.parseInt(context.pathParam("account_id"))));
+        context.status(200);
     }
 
 

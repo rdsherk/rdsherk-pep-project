@@ -30,6 +30,9 @@ public class MessageDAO {
     }
 
     public Message addMessage(Message message) {
+        if (message.getMessage_text() == "" || message.getMessage_text().length() > 254) {
+            return null;
+        }
         Connection connection = ConnectionUtil.getConnection();
         try {
             //Write SQL logic here. You should only be inserting with the name column, so that the database may
@@ -39,8 +42,8 @@ public class MessageDAO {
 
             //write preparedStatement's setString method here.
             preparedStatement.setInt(1, message.getPosted_by());
-            preparedStatement.setString(1, message.getMessage_text());
-            preparedStatement.setLong(1, message.getTime_posted_epoch());
+            preparedStatement.setString(2, message.getMessage_text());
+            preparedStatement.setLong(3, message.getTime_posted_epoch());
 
             preparedStatement.executeUpdate();
             ResultSet pkeyResultSet = preparedStatement.getGeneratedKeys();
@@ -90,8 +93,10 @@ public class MessageDAO {
 
             Message message = this.getMessage(id);
             if (message != null) {
-                preparedStatement.executeQuery();
-                return message;
+                preparedStatement.execute();
+                Message tempMessage = new Message(message.getMessage_id(), message.getPosted_by(), message.getMessage_text(), message.getTime_posted_epoch());
+                
+                return tempMessage;
             }
         }catch(SQLException e){
             System.out.println(e.getMessage());
@@ -111,11 +116,11 @@ public class MessageDAO {
             preparedStatement.setInt(2, id);
 
             Message message = this.getMessage(id);
-            if (message == null || message_text == "") {
+            if (message == null || message_text == "" || message_text.length() > 254) {
                 return null;
             }
 
-            preparedStatement.executeQuery();
+            preparedStatement.execute();
             return this.getMessage(id);
         }catch(SQLException e){
             System.out.println(e.getMessage());
@@ -137,10 +142,10 @@ public class MessageDAO {
                         rs.getString("message_text"),
                         rs.getLong("time_posted_epoch"));
                 messages.add(message); 
-            }
+            }           
         }catch(SQLException e){
             System.out.println(e.getMessage());
         }
-        return null;
+        return messages;
     }
 }

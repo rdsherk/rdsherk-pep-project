@@ -33,7 +33,7 @@ public class AccountDAO {
         Connection connection = ConnectionUtil.getConnection();
         try {
             //Write SQL logic here
-            String sql = "SELECT * FROM account WHERE username = ? AND password = ?";
+            String sql = "SELECT * FROM account WHERE username = ? AND password = ?;";
             PreparedStatement preparedStatement = connection.prepareStatement(sql);
 
             //write preparedStatement's setInt method here.
@@ -55,6 +55,9 @@ public class AccountDAO {
 
     public Account createAccount(String username, String password) {
         Connection connection = ConnectionUtil.getConnection();
+        if (username == "" || password.length() < 4 || this.getAccountByUsername(username) != null ) {
+            return null;
+        }
         try {
             //Write SQL logic here. When inserting, you only need to define the departure_city and arrival_city
             //values (two columns total!)
@@ -70,6 +73,29 @@ public class AccountDAO {
             if(pkeyResultSet.next()){
                 int generated_account_id = (int) pkeyResultSet.getLong(1);
                 return new Account(generated_account_id, username, password);
+            }
+        }catch(SQLException e){
+            System.out.println(e.getMessage());
+        }
+        return null;
+    }
+
+    public Account getAccountByUsername(String username) {
+        Connection connection = ConnectionUtil.getConnection();
+        try {
+            //Write SQL logic here
+            String sql = "SELECT * FROM account WHERE username = ?;";
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+
+            //write preparedStatement's setInt method here.
+            preparedStatement.setString(1, username);
+
+            ResultSet rs = preparedStatement.executeQuery();
+            while(rs.next()){
+                Account account = new Account(rs.getInt("account_id"),
+                        rs.getString("username"),
+                        rs.getString("password"));
+                return account;
             }
         }catch(SQLException e){
             System.out.println(e.getMessage());
